@@ -117,9 +117,9 @@ Negotiate Client Certificate : Enabled
 
 この CTL ストアを個別に指定して、クライアント証明書を発行した証明機関のみを含めることで、他の証明機関の証明書の影響を取り除くことができます。
 以下に、設定手順をご紹介します。
-<br>
-1. 管理者権限でコマンドプロンプトを起動し、以下のように実行します。
 
+
+1. 管理者権限でコマンドプロンプトを起動し、以下のように実行します。
 ```
 certutil -f -addstore <任意の証明書ストア名> <クライアント証明書のルート証明書>
 
@@ -305,7 +305,6 @@ Negotiate Client Certificate : Enabled
 失効確認を無効化する手順を、以下にご紹介します。
 <br>
 1. 管理者権限でコマンドプロンプトを起動し、現状の 49443 ポートの SSL バインドを一旦削除します。
-
 ```
 netsh http delete sslcert hostnameport=sts.test.com:49443
 
@@ -313,7 +312,7 @@ netsh http delete sslcert hostnameport=sts.test.com:49443
 ```
 <br>
 2. 続いて以下のコマンドを実行し、失効確認を無効化してSSL バインドを設定します。
- 
+
 ```
 netsh http add sslcert hostnameport=sts.testcom:49443 certhash=47b90e1e818ba8cf431d404fff232f1ba17bf078 appid={5d89a20c-beab-4389-9447-324788eb944a} certstorename=MY verifyclientcertrevocation=disable
 
