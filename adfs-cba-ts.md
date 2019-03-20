@@ -90,17 +90,18 @@ CTL ストアの設定状況は、以下の netsh コマンドで確認するこ
 ```
 netsh http show sslcert
 ```
+
 管理者権限で上記のコマンドをコマンドプロンプトから実行すると、いくつか SSL のバインドの情報が表示されるかと思います。
 その中で、証明書認証に利用する 【フェデレーションサービス名】:49443 の情報を確認します。
 (AD FS 2016 以降では、環境によっては 49443 ポートではなく、certauth.【フェデレーションサービス名の FQDN】:443 である可能性もあります。)
 
- 以下は、フェデレーションサービス名が sts.test.com である場合の実行結果例です。
+以下は、フェデレーションサービス名が sts.test.com である場合の実行結果例です。
 
 ```
 netsh http show sslcert
 
-Hostname:port               : <font color="Red">sts.test.com:49443</font> ★<<< ポート49443 に関する設定です。こちらを確認します。
-Certificate Hash             : <font color="Blue">47b90e1e818ba8cf431d404fff232f1ba17bf078</font> ★ <<< SSL サーバー証明書に対して一意で、環境によって異なります。
+Hostname:port               : sts.test.com:49443 ★<<< ポート49443 に関する設定です。こちらを確認します。
+Certificate Hash             : 47b90e1e818ba8cf431d404fff232f1ba17bf078 ★ <<< SSL サーバー証明書に対して一意で、環境によって異なります。
 Application ID               : {5d89a20c-beab-4389-9447-324788eb944a} ★ <<< AD FS サービスを示すもので、全環境で同一です。
 Certificate Store Name       : MY
 Verify Client Certificate Revocation : Enabled
@@ -116,7 +117,7 @@ Negotiate Client Certificate : Enabled
 
 この CTL ストアを個別に指定して、クライアント証明書を発行した証明機関のみを含めることで、他の証明機関の証明書の影響を取り除くことができます。
 以下に、設定手順をご紹介します。
-
+<br>
 1. 管理者権限でコマンドプロンプトを起動し、以下のように実行します。
 
 ```
@@ -124,9 +125,10 @@ certutil -f -addstore <任意の証明書ストア名> <クライアント証明
 
 (例)
 certutil -f -addstore adfsclient c:\temp\rootca.cer
-```
+
 ※ c:\temp\rootca.cer は、クライアント証明書を発行したルートCA の証明書をエクスポートした .cer ファイルです。
 ※ このコマンドにより、adfsclient という名前のストアが作成され、ルートCA の証明書がインポートされます。
+```
 
 <br>
 2. 続いて以下のコマンドを実行し、作成したストア内にルートCAの証明書が存在することを確認します。
@@ -138,7 +140,7 @@ certutil -store adfsclient
 3. 続いて以下のコマンドを実行し、現状の 49443 ポートの SSL バインドを一旦削除します。
 
 ```
- netsh http delete sslcert hostnameport=<font color="Red">sts.test.com:49443</font>
+ netsh http delete sslcert hostnameport=sts.test.com:49443
 
  ※ hostnameport には、お客様の環境で確認した値を指定します。
 ```
@@ -146,7 +148,7 @@ certutil -store adfsclient
 4. 続いて以下のコマンドを実行し、CTLストアを作成したものに指定し、SSL バインドを設定します。
 
 ```
-netsh http add sslcert hostnameport=<font color="Red">sts.testcom:49443</font> certhash=<font color="Blue">47b90e1e818ba8cf431d404fff232f1ba17bf078</font> appid={5d89a20c-beab-4389-9447-324788eb944a} certstorename=MY sslctlstorename=adfsclient
+netsh http add sslcert hostnameport=sts.testcom:49443 certhash=47b90e1e818ba8cf431d404fff232f1ba17bf078 appid={5d89a20c-beab-4389-9447-324788eb944a} certstorename=MY sslctlstorename=adfsclient
  
 ※ hostnameport、certhash には、お客様の環境で確認した値を指定します。
 ```
@@ -166,7 +168,7 @@ Usage Check                 : Enabled
 Revocation Freshness Time   : 0
 URL Retrieval Timeout       : 0
 Ctl Identifier               : (null)
-Ctl Store Name               : <font color="Green">adfsclient</font> ★<<< 個別に作成したストアが設定されています。
+Ctl Store Name               : adfsclient ★<<< 個別に作成したストアが設定されています。
 DS Mapper Usage             : Disabled
 Negotiate Client Certificate : Enabled
 ```
@@ -283,8 +285,8 @@ netsh http show sslcert
 ```
 netsh http show sslcert
 
-Hostname:port               : <font color="Red">sts.test.com:49443</font> ★<<< ポート49443 に関する設定です。こちら確認します。
-Certificate Hash             : <font color="Blue">47b90e1e818ba8cf431d404fff232f1ba17bf078</font> ★ <<< SSL サーバー証明書に対して一意で、環境によって異なります。
+Hostname:port               : sts.test.com:49443 ★<<< ポート49443 に関する設定です。こちら確認します。
+Certificate Hash             : 47b90e1e818ba8cf431d404fff232f1ba17bf078 ★ <<< SSL サーバー証明書に対して一意で、環境によって異なります。
 Application ID               : {5d89a20c-beab-4389-9447-324788eb944a} ★ <<< AD FS サービスを示すもので、全環境で同一です。
 Certificate Store Name       : MY
 Verify Client Certificate Revocation : Enabled ★ <<< 既定では、クライアント証明書の失効確認が有効 (Enabled) になっています。
@@ -303,7 +305,7 @@ Negotiate Client Certificate : Enabled
 1. 管理者権限でコマンドプロンプトを起動し、現状の 49443 ポートの SSL バインドを一旦削除します。
 
 ```
-netsh http delete sslcert hostnameport=<font color="Red">sts.test.com:49443</font>
+netsh http delete sslcert hostnameport=sts.test.com:49443
 
 ※ hostnameport には、お客様の環境で確認した値を指定します。
 ```
@@ -311,7 +313,7 @@ netsh http delete sslcert hostnameport=<font color="Red">sts.test.com:49443</fon
 2. 続いて以下のコマンドを実行し、失効確認を無効化してSSL バインドを設定します。
  
 ```
-netsh http add sslcert hostnameport=<font color="Red">sts.testcom:49443</font> certhash=<font color="Blue">47b90e1e818ba8cf431d404fff232f1ba17bf078</font> appid={5d89a20c-beab-4389-9447-324788eb944a} certstorename=MY <font color="Green">verifyclientcertrevocation=disable</font>
+netsh http add sslcert hostnameport=sts.testcom:49443 certhash=47b90e1e818ba8cf431d404fff232f1ba17bf078 appid={5d89a20c-beab-4389-9447-324788eb944a} certstorename=MY verifyclientcertrevocation=disable
 
 ※ hostnameport、certhash には、お客様の環境で確認した値を指定します。
 ```
@@ -321,11 +323,11 @@ netsh http add sslcert hostnameport=<font color="Red">sts.testcom:49443</font> c
 ```
 netsh http show sslcert
 
-Hostname:port               : <font color="Red">sts.test.com:49443</font>
-Certificate Hash             : <font color="Blue">47b90e1e818ba8cf431d404fff232f1ba17bf078</font>
+Hostname:port               : sts.test.com:49443
+Certificate Hash             : 47b90e1e818ba8cf431d404fff232f1ba17bf078
 Application ID               : {5d89a20c-beab-4389-9447-324788eb944a}
 Certificate Store Name       : MY
-Verify Client Certificate Revocation : <font color="Green">Disabled</font> ★ <<< 失効確認が無効化されています。
+Verify Client Certificate Revocation : Disabled ★ <<< 失効確認が無効化されています。
 Verify Revocation Using Cached Client Certificate Only : Disabled
 Usage Check                 : Enabled
 Revocation Freshness Time   : 0
@@ -384,5 +386,3 @@ AD FS の証明書認証をトラブルシューティングするケースで�
 
 製品動作に関する正式な見解や回答については、お客様環境などを十分に把握したうえでサポート部門より提供させていただきますので、ぜひ弊社サポート サービスをご利用ください。
 ※本情報の内容（添付文書、リンク先などを含む）は、作成日時点でのものであり、予告なく変更される場合があります。
-
-Tags  ADFS CBA トラブルシューティング トラブルシュート 証明書認証
