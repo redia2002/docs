@@ -9,7 +9,7 @@ tags:
 
 # AD FS クレームルール関連のトラブルシューティング
 
-こんにちは、Azure & Identitiy サポートチームの竹村です。
+こんにちは、Azure & Identitiy サポートチームの竹村です。<br>
 今回は、AD FS のクレームルールに関連した問題のトラブルシュート方法をご紹介します。
 
 ## エラー画面、エラーイベントの特徴
@@ -45,15 +45,15 @@ AD FS のクレームルールにより認証が失敗している場合、エ�
 
 ![](./adfs-crule-ts/adfs_crule_04.jpg)
 
-一連のイベントはおおよそ同じタイムスタンプに記録されますが、認証要求が多い場合などにはこの ID で判断します。
+一連のイベントはおおよそ同じタイムスタンプに記録されますが、認証要求が多い場合などにはこの ID で判断します。<br>
 Instance ID が同じ値となっているイベントは、同一の認証処理内で記録されたイベントになります。
 
 ![](./adfs-crule-ts/adfs_crule_05.jpg)
 
 イベント ID 501 には、発行されたクレームとその値が交互に出力されます。
 例えば上記の例では、
-http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-client-ip  というクレームの値として、192.168.5.101 がセットされています。
-同様に、http://schemas.microsoft.com/2012/01/requestcontext/claims/relyingpartytrustid というクレームの値として、https://login.microsoftonline.com/login.srf がセットされています。
+"http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-client-ip"  というクレームの値として、192.168.5.101 がセットされています。
+同様に、"http://schemas.microsoft.com/2012/01/requestcontext/claims/relyingpartytrustid" というクレームの値として、"https://login.microsoftonline.com/login.srf" がセットされています。
 
 ```
 クレーム
@@ -63,17 +63,16 @@ http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-client-ip  と�
 値
 
 ...
-
-という順番で記録されています
 ```
-
-これらは、その量に応じて複数のイベント ID 501 にまたがって記録されます。
+という順番で記録されています。<br>
+<br>
+これらは、その量に応じて複数のイベント ID 501 にまたがって記録されます。<br>
 どのイベントが該当の処理のものかを判断するために、先述の Instance ID を利用します。
 
 
 ### (2) クレーム ルールを確認し、イベント ID 501 に記録されているクレームの内容と比較します。
 
-手順 (1) で、発行されているクレームを確認することができました。
+手順 (1) で、発行されているクレームを確認することができました。<br>
 次に、AD FS に設定されているクレーム ルールを確認します。
 
 クレーム ルールは、AD FS プライマリサーバー上で、以下のように Powershell を実行することで確認できます。
@@ -82,7 +81,7 @@ http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-client-ip  と�
 実行例:
 ※ Identifier オプションには、先述のイベント ID 325 で確認した対象の証明書利用者信頼の識別子を指定します。
 
-> (Get-AdfsRelyingPartyTrust -Identifier "urn:federation:MicrosoftOnline").IssuanceAuthorizationRules
+(Get-AdfsRelyingPartyTrust -Identifier "urn:federation:MicrosoftOnline").IssuanceAuthorizationRules
 
 @RuleTemplate = "AllowAllAuthzRule"
 => issue(Type = "http://schemas.microsoft.com/authorization/claims/permit", Value = "true");
@@ -137,7 +136,7 @@ NOT exists([Type == "http://schemas.microsoft.com/2012/01/requestcontext/claims/
 です。
 
  
-上述の実行例ですと、@RuleTemplate = "AllowAllAuthzRule" では、何の条件も指定せずにアクセスを許可しています。
+上述の実行例ですと、@RuleTemplate = "AllowAllAuthzRule" では、何の条件も指定せずにアクセスを許可しています。<br>
 つまり、すべてのアクセスを許可しています。
 
 @RuleName = "Test" では、
@@ -146,7 +145,7 @@ http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client
 
 というクレームの値として、
 
-"\b192\.168\.1\.10\b|\b192\.168\.1\.11\b"
+"\b192\\.168\\.1\\.10\b|\b192\\.168\\.1\\.11\b"
 
 という正規表現にマッチしない場合 (つまり、192.168.1.10 もしくは 192.168.1.11 ではない場合) には、アクセスを拒否しています。
 
@@ -173,10 +172,10 @@ NOT exists と記述した場合、そのようなクレームが存在しない
 
 例えば、手順 (2) で確認したイベント ID 501 に、以下のような出力があったとします。
 
-http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip
+http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip<br>
 192.168.1.12
 
-このような場合には、192.168.1.10、192.168.1.11 に加えて、192.168.1.12 を許可するように追加します。
+このような場合には、192.168.1.10、192.168.1.11 に加えて、192.168.1.12 を許可するように追加します。<br>
 (192.168.1.12 が、お客様の環境で許可すべき IP アドレスであることが確認できている前提です。)
 
 クレーム ルールを編集するには、AD FS 管理ツールから該当の証明書利用者信頼を選択し、[要求規則の編集] ウィンドウを開いて [発行承認規則] から該当のルールを選択します。
@@ -185,16 +184,13 @@ http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client
 
 ※ もし、新しいルールを追加する場合には、この画面で [規則の追加] を行います。
 
-
 今回の例では、Test というルールを選択して [規則の編集] を行います。
 
 ![](./adfs-crule-ts/adfs_crule_07.jpg)
 
 上記のように編集することで、
-
 http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip に 192.168.1.12 がセットされている場合にもアクセスが拒否されないようになります。
 
- 
 
 よくあるケースとしては、ネットワークのアドレスが変わってしまったり、User Agent の文字列が意図していないものに変わってしまうことで、急に認証が拒否されてしまう場合があります。
 
