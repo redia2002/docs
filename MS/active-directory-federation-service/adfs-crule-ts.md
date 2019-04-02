@@ -125,13 +125,13 @@ NOT exists([Type == "`http://schemas.microsoft.com/2012/01/requestcontext/claims
 
 「アクセスを許可する」に該当する記述は、
 
-=> issue(Type = "`http://schemas.microsoft.com/authorization/claims/**permit**`", Value = "true");
+=> issue(Type = "`http://schemas.microsoft.com/authorization/claims/permit`", Value = "true");
 
 です。
 
 「アクセスを拒否する」に該当する記述は、
 
-=> issue(Type = "`http://schemas.microsoft.com/authorization/claims/**deny**`", Value = "true");
+=> issue(Type = "`http://schemas.microsoft.com/authorization/claims/deny`", Value = "true");
 
 です。
 
@@ -145,7 +145,7 @@ NOT exists([Type == "`http://schemas.microsoft.com/2012/01/requestcontext/claims
 
 というクレームの値として、
 
-`\b192\\.168\\.1\\.10\b|\b192\\.168\\.1\\.11\b`
+`\b192\.168\.1\.10\b|\b192\.168\.1\.11\b`
 
 という正規表現にマッチしない場合 (つまり、192.168.1.10 もしくは 192.168.1.11 ではない場合) には、アクセスを拒否しています。
 
