@@ -52,8 +52,8 @@ Instance ID が同じ値となっているイベントは、同一の認証処�
 
 イベント ID 501 には、発行されたクレームとその値が交互に出力されます。
 例えば上記の例では、
-"http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-client-ip"  というクレームの値として、192.168.5.101 がセットされています。
-同様に、"http://schemas.microsoft.com/2012/01/requestcontext/claims/relyingpartytrustid" というクレームの値として、"https://login.microsoftonline.com/login.srf" がセットされています。
+`http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-client-ip`  というクレームの値として、192.168.5.101 がセットされています。
+同様に、`http://schemas.microsoft.com/2012/01/requestcontext/claims/relyingpartytrustid` というクレームの値として、`https://login.microsoftonline.com/login.srf` がセットされています。
 
 ```
 クレーム
@@ -84,11 +84,11 @@ Instance ID が同じ値となっているイベントは、同一の認証処�
 (Get-AdfsRelyingPartyTrust -Identifier "urn:federation:MicrosoftOnline").IssuanceAuthorizationRules
 
 @RuleTemplate = "AllowAllAuthzRule"
-=> issue(Type = "http://schemas.microsoft.com/authorization/claims/permit", Value = "true");
+=> issue(Type = "`http://schemas.microsoft.com/authorization/claims/permit`", Value = "true");
 
 @RuleName = "Test"
-NOT exists([Type == "http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip", Value =~ "\b192\.168\.1\.10\b|\b192\.168\.1\.11\b"])
-=> issue(Type = "http://schemas.microsoft.com/authorization/claims/deny", Value = "true");
+NOT exists([Type == "`http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip`", Value =~ "\b192\.168\.1\.10\b|\b192\.168\.1\.11\b"])
+=> issue(Type = "`http://schemas.microsoft.com/authorization/claims/deny`", Value = "true");
 ```
 
 クレームルールの詳細についてはここでは割愛しますが、基本的に以下のいずれかの構成になっています。
@@ -125,13 +125,13 @@ NOT exists([Type == "http://schemas.microsoft.com/2012/01/requestcontext/claims/
 
 「アクセスを許可する」に該当する記述は、
 
-=> issue(Type = "http://schemas.microsoft.com/authorization/claims/<font color="Red">permit</font>", Value = "true");
+=> issue(Type = "`http://schemas.microsoft.com/authorization/claims/<font color="Red">permit</font>`", Value = "true");
 
 です。
 
 「アクセスを拒否する」に該当する記述は、
 
-=> issue(Type = "http://schemas.microsoft.com/authorization/claims/<font color="Red">deny</font>", Value = "true");
+=> issue(Type = "`http://schemas.microsoft.com/authorization/claims/<font color="Red">deny</font>`", Value = "true");
 
 です。
 
@@ -141,7 +141,7 @@ NOT exists([Type == "http://schemas.microsoft.com/2012/01/requestcontext/claims/
 
 @RuleName = "Test" では、
 
-http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip
+"`http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip`"
 
 というクレームの値として、
 
@@ -163,7 +163,7 @@ NOT exists と記述した場合、そのようなクレームが存在しない
 
 今回の例の場合、イベント ID 501 に記録されているクレームと値を確認すると、
 
-"http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip"
+"`http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip`"
 
 というクレームに 192.168.1.10 もしくは 192.168.1.11 という値がセットされていないためにアクセスが拒否されていることが分かります。
 
@@ -172,7 +172,7 @@ NOT exists と記述した場合、そのようなクレームが存在しない
 
 例えば、手順 (2) で確認したイベント ID 501 に、以下のような出力があったとします。
 
-http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip<br>
+`http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip`<br>
 192.168.1.12
 
 このような場合には、192.168.1.10、192.168.1.11 に加えて、192.168.1.12 を許可するように追加します。<br>
@@ -189,12 +189,11 @@ http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client
 ![](./adfs-crule-ts/adfs_crule_07.jpg)
 
 上記のように編集することで、
-http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip に 192.168.1.12 がセットされている場合にもアクセスが拒否されないようになります。
+`http://schemas.microsoft.com/2012/01/requestcontext/claims/x-ms-forwarded-client-ip` に 192.168.1.12 がセットされている場合にもアクセスが拒否されないようになります。
 
 
 よくあるケースとしては、ネットワークのアドレスが変わってしまったり、User Agent の文字列が意図していないものに変わってしまうことで、急に認証が拒否されてしまう場合があります。
-
- 
+<br>
 いかがでしたでしょうか。<br>
 <br>
 AD FS のクレームルールによって認証に失敗している場合、上記のステップを踏むことで、ある程度機械的に検知、確認、対応が可能です。
