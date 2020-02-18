@@ -9,11 +9,10 @@ tags:
   - supportMultipleDomain
 ---
 
-# AADSTS50107 The requested federation realm object 'xxx' does not exist.
-# (Issuer ID / Issuer URI と SupportMultipleDomain)
+# AADSTS50107 The requested federation realm object 'xxx' does not exist. (Issuer ID / Issuer URI と SupportMultipleDomain)
 
 こんにちは、Azure & Identitiy サポートチームの竹村です。
-今回は、多くのお客様からお問合せをいただく AADSTS50107 のエラーについて、既知の事例や対応方法をご紹介します。
+今回は、多くのお客様からお問合せをいただく AADSTS50107 のエラーについて、その意味や対応方法をご紹介します。
 
 ## 1. ADSTS50107  と  Issuer ID、 Issuer URI
 
@@ -35,6 +34,12 @@ AADSTS50107 は、IdP が発行した Issuer ID と、Azure AD のカスタム�
 
 上記のように、エラー画面には "realm object" と "does not exist." の間に文字列が表示されますが、これが IdP が発行した Issuer ID になります。<br>
 そして、Azure AD のカスタムドメインには、ここに表示されている文字列の Issuer URI が存在していないことを示しています。<br>
+Azure AD のカスタムドメインに設定されている Issuer URI を確認するためには、Get-MsolDomainFederationSettings コマンドレットなどを使用します。<br>
+
+```
+Get-MsolDomainFederationSettings -DomainName "test.com"
+```
+得られる結果の IssuerUri の値を確認してください。
 
 
 ## 2. -supportMultipleDomain オプションについて
