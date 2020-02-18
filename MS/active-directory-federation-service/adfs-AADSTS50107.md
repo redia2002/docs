@@ -39,7 +39,7 @@ Azure AD のカスタムドメインに設定されている Issuer URI を確�
 ```
 Get-MsolDomainFederationSettings -DomainName "test.com"
 ```
-得られる結果の IssuerUri の値を確認してください。
+上記コマンドを実行した結果の IssuerUri の値を確認してください。
 
 
 ## 2. -supportMultipleDomain オプションについて
@@ -52,9 +52,9 @@ AD FS で Convert-MsolDomainToFederated コマンドレットや、Update-MsolFe
 AD FS と Azure AD のカスタム ドメインが 1 対 1 の場合には、-supportMultipleDomain オプションは必要ありません。<br>
 -supportMultipleDomain オプションを指定しない場合、 Convert-MsolDomainToFederated コマンドレットや、Update-MsolFederatedDomain コマンドレットは、AD FS の識別子 (`http://<フェデレーションサービス名>/services/trust`) を Issuer URI としてカスタム ドメインに設定します。<br>
 AD FS 側では Issuer URI を発行するクレームルールは作成されません。<br>
-ルールがない場合、AD FS は既定で Issuer URI として AD FS の識別子 (http://<フェデレーションサービス名>/services/trust)  をクレームにセットするため、Issuer URI と合致し、要件を満たすことができます。<br>
+ルールがない場合、AD FS は既定で Issuer URI として AD FS の識別子 (`http://<フェデレーションサービス名>/services/trust`)  をクレームにセットするため、Issuer URI と合致し、要件を満たすことができます。<br>
 <br>
--supportMultipleDomain オプションを指定すると、Azure AD のカスタムドメイン側には、http://<カスタムドメイン>/services/trust/  という値が Issuer URI にセットされます。<br>
+-supportMultipleDomain オプションを指定すると、Azure AD のカスタムドメイン側には、`http://<カスタムドメイン>/services/trust/`  という値が Issuer URI にセットされます。<br>
 例えば、a.com と b.com という 2 つのドメインに対して、-supportMultipleDomain オプションを指定して 1つの AD FS ファームとフェデレーションを構成すると、それぞれのドメインには以下の Issuer URI がセットされます。<br>
 
 ```
@@ -92,7 +92,7 @@ Azure AD では、サブドメインを作成することができます。<br>
 このケースでは、既定のルールでも問題は発生しません。<br>
 上述の a.com と b.com の場合と同様の動作になります。<br>
 ただし、さらにここから sub2.a.com を作成しますと、sub1.a.com と a.com は別々のドメインですが、a.com と sub2.a.com との間には親子関係が結ばれることになります。<br>
-この場合、後述の「(2) サブドメインを後から作成した場合」を考慮して、ルールを書き換える必要があります。<br>
+この場合、後述の「4. より複雑な環境におけるルールの作成例」を考慮して、ルールを書き換える必要があります。<br>
 
 ### (2) サブドメインを後から作成した場合
 最初に a.com を作成し、後から sub1.com を作成した場合、a.com と sub1.a.com との間には「親子関係」が結ばれます。<br>
@@ -123,6 +123,13 @@ c:[Type == "http://schemas.xmlsoap.org/claims/UPN"]
 
 ```
 c:[Type == "http://schemas.xmlsoap.org/claims/UPN"]
+=> issue(Type = "http://schemas.microsoft.com/ws/2008/06/identity/claims/issuerid", Value = regexreplace(c.Value, "(?i)(^([^@]+)@)(.*)(?<domain>(a\.com))$", "http://${domain}/adfs/services/trust/"));
+```
+
+a.com の他にもトップレベルドメインが存在する場合 (-supportMultipleDomain を指定している場合、ほとんどがこちらのケースに該当するかと思います) は、以下のようにルールを記述します。
+
+```
+c:[Type == "http://schemas.xmlsoap.org/claims/UPN"]
 => issue(Type = "http://schemas.microsoft.com/ws/2008/06/identity/claims/issuerid", Value = regexreplace(c.Value, "(?i)(^([^@]+)@)(.*)(?<domain>(a\.com|b\.co\.jp|c\.net))$", "http://${domain}/adfs/services/trust/"));
 ```
 
@@ -143,6 +150,7 @@ c.net (親 ドメイン)
    sub2.c.net (子ドメイン) 
 ```
 ルールに列挙したドメイン  (\ は . をエスケープしています) と、その親子関係のあるサブドメインすべてについて、それぞれの親ドメインに相当する部分を抽出して Issuer ID をセットします。<br>
+
 <br>
 なお、Azure AD Connect で AD FS を構成、管理している場合には、自動で以下のようなルールが作成されます。<br>
 
@@ -207,7 +215,7 @@ c1:[Type == "http://domain/upnsuffix", Value =~ "(?i)a\.com$"]  && c2:[Type == "
 c:[Type == "http://domain/upnsuffix", Value =~ "(?i)b\.co.jp$"]
  => issue(Type = "http://schemas.microsoft.com/ws/2008/06/identity/claims/issuerid", Value = "http://b.co.jp/adfs/services/trust/");
 ```
-以上のように、AADSTS50107 が発生した場合には、AD FS (IdP) が発行している Issuer ID と、Azure AD のカスタムドメインに設定されている Issuer URI に着目し、合致するようにルールを書き換えることで (もしくは正しい Issuer URI をカスタムドメインに設定することで) 対応することができます。
+以上のように、AADSTS50107 が発生した場合には、AD FS (IdP) が発行している Issuer ID と、Azure AD のカスタムドメインに設定されている Issuer URI に着目し、合致するようにルールを書き換えることで (もしくは正しい Issuer URI をカスタムドメインに設定することで) 対応することができます。<br>
 <br>
 いかがでしたでしょうか。<br>
 上記内容が少しでも参考となりますと幸いです。<br>
