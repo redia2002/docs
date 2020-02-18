@@ -10,7 +10,7 @@ tags:
 ---
 
 # AADSTS50107 The requested federation realm object 'xxx' does not exist.
-# --- Issuer ID / Issuer URI と SupportMultipleDomain ---
+# (Issuer ID / Issuer URI と SupportMultipleDomain)
 
 こんにちは、Azure & Identitiy サポートチームの竹村です。
 今回は、多くのお客様からお問合せをいただく AADSTS50107 のエラーについて、既知の事例や対応方法をご紹介します。
@@ -45,7 +45,7 @@ AD FS で Convert-MsolDomainToFederated コマンドレットや、Update-MsolFe
 この背景には、カスタム ドメインに設定する Issuer URI は、重複が許可されず必ず一意にする必要がある、という Azure AD の要件があります。<br>
 <br>
 AD FS と Azure AD のカスタム ドメインが 1 対 1 の場合には、-supportMultipleDomain オプションは必要ありません。<br>
--supportMultipleDomain オプションを指定しない場合、 Convert-MsolDomainToFederated コマンドレットや、Update-MsolFederatedDomain コマンドレットは、AD FS の識別子 (http://<フェデレーションサービス名>/services/trust) を Issuer URI としてカスタム ドメインに設定します。<br>
+-supportMultipleDomain オプションを指定しない場合、 Convert-MsolDomainToFederated コマンドレットや、Update-MsolFederatedDomain コマンドレットは、AD FS の識別子 (`http://<フェデレーションサービス名>/services/trust`) を Issuer URI としてカスタム ドメインに設定します。<br>
 AD FS 側では Issuer URI を発行するクレームルールは作成されません。<br>
 ルールがない場合、AD FS は既定で Issuer URI として AD FS の識別子 (http://<フェデレーションサービス名>/services/trust)  をクレームにセットするため、Issuer URI と合致し、要件を満たすことができます。<br>
 <br>
@@ -65,8 +65,8 @@ http://b.com/services/trust/
 c:[Type == "http://schemas.xmlsoap.org/claims/UPN"]
  => issue(Type = "http://schemas.microsoft.com/ws/2008/06/identity/claims/issuerid", Value = regexreplace(c.Value, ".+@(?<domain>.+)", "http://${domain}/adfs/services/trust/"));
 ```
-例えば、user01@a.com というユーザーで認証した場合、上記のルールによって UPN の @ 以下のドメイン部分が抽出されて、`http://a.com/adfs/services/trust/` という値が Issuer ID にセットされます。<br>
-また、user02@b.com というユーザーで認証した場合、同様に `http://b.com/adfs/services/trust/` という値が Issuer ID にセットされます。<br>
+例えば、`user01@a.com` というユーザーで認証した場合、上記のルールによって UPN の @ 以下のドメイン部分が抽出されて、`http://a.com/adfs/services/trust/` という値が Issuer ID にセットされます。<br>
+また、`user02@b.com` というユーザーで認証した場合、同様に `http://b.com/adfs/services/trust/` という値が Issuer ID にセットされます。<br>
 <br>
 このようにして、各ドメインの Issuer ID と IssuerURI の整合性を取ることを意図したものが、-supportMultipleDomain オプションの正体です。<br>
 <br>
@@ -101,7 +101,7 @@ AD FS と 親ドメインが 1 対 1 で、-supportMultipleDomain を指定し�
 親ドメインであっても、子ドメインであっても、既定の AD FS の識別子 (`http://<フェデレーションサービス名>/services/trust`) が固定で Issuer ID にセットされ、親ドメインにも同一の値が Issuer URI としてセットされているためです。<br>
 <br>
 -supportMultipleDomain を指定している場合には、既定のルールでは問題が発生します。<br>
-例えば、user01@sub1.a.com というユーザーで認証した場合を考えます。<br>
+例えば、`user01@sub1.a.com` というユーザーで認証した場合を考えます。<br>
 この時、既定のルールですと、UPN の @ 以下のドメイン部分が抽出されて、`http://sub1.a.com/adfs/services/trust/` という値が Issuer ID にセットされます。<br>
 しかし、親ドメインの Issuer URI は `http://a.com/adfs/services/trust/` ですので合致しません。<br>
 <br>
@@ -122,7 +122,7 @@ c:[Type == "http://schemas.xmlsoap.org/claims/UPN"]
 ```
 
 上記は、a.com、b.co.jp、c.net というトップレベルドメインと、その子ドメインが存在する環境に対応したルールです。<br>
-例えば、以下のような構成に対応します。<br>
+以下のような構成に対応したものになります。<br>
 
 ```
 a.com (親 ドメイン)
@@ -143,10 +143,16 @@ c.net (親 ドメイン)
 
 ```
 c1:[Type == "http://schemas.xmlsoap.org/claims/UPN"] && c2:[Type == "http://schemas.microsoft.com/ws/2012/01/accounttype", Value == "User"] 
+=> issue(Type = "http://schemas.microsoft.com/ws/2008/06/identity/claims/issuerid", Value = regexreplace(c1.Value, "(?i)(^([^@]+)@)(?<domain>(a\.com|b\.co\.jp|c\.net))$", "http://${domain}/adfs/services/trust/"));
+```
+しかし、この自動的に作成されるルールは、子ドメインに対応していません。<br>
+Azure AD Connect で構成、管理している場合で、子ドメインが存在する場合には、以下のように `(?i)(^([^@]+)@)` と `(?<domain>` との間に  `(.*)` を追記してください。
+
+```
+c1:[Type == "http://schemas.xmlsoap.org/claims/UPN"] && c2:[Type == "http://schemas.microsoft.com/ws/2012/01/accounttype", Value == "User"] 
 => issue(Type = "http://schemas.microsoft.com/ws/2008/06/identity/claims/issuerid", Value = regexreplace(c1.Value, "(?i)(^([^@]+)@)(.*)(?<domain>(a\.com|b\.co\.jp|c\.net))$", "http://${domain}/adfs/services/trust/"));
 ```
-しかし、黄色くハイライトした部分が抜け落ちており、子ドメインに対応することができません。<br>
-Azure AD Connect で構成、管理している場合で、子ドメインが存在する場合には、(.*) を追記してください。<br>
+
 AADSTS50107 のエラーメッセージに子ドメインのユーザーの UPN がそのまま表示されている場合、ほとんどがこちらのケースに該当します。<br>
 
 ## 4. より複雑な環境におけるルールの作成例
@@ -157,23 +163,23 @@ AADSTS50107 のエラーメッセージに子ドメインのユーザーの UPN 
 sub1.a.com (トップレベル ドメイン)
 
 a.com (トップレベル ドメイン)
-&nbsp&nbsp+--&nbsp&nbspsub2.a.com (a.com の 子ドメイン)
+  sub2.a.com (a.com の 子ドメイン)
 
 b.co.jp (トップレベル ドメイン)
-&nbsp&nbsp+--&nbsp&nbspsub1.b.co.jp (b.co.jp の子ドメイン)
+  sub1.b.co.jp (b.co.jp の子ドメイン)
 ```
 
 この時、それぞれのドメインでセットすべき Issuer ID は以下のようになります。
 
 ```
-sub1.a.com&nbsp&nbsp: 
-&nbsp&nbsp`http://sub1.a.com/adfs/services/trust/`
+sub1.a.com
+http://sub1.a.com/adfs/services/trust/
 
-a.som および sub2.a.com&nbsp&nbsp:  
-&nbsp&nbsp`http://a.com/adfs/services/trust/`
+a.som および sub2.a.com
+http://a.com/adfs/services/trust/
 
-b.co.jp および sub1.b.co.jp&nbsp&nbsp:
-&nbsp&nbsp`http://b.co.jp/adfs/services/trust/`
+b.co.jp および sub1.b.co.jp
+http://b.co.jp/adfs/services/trust/
 ```
 
 このように、親子関係を持たないサブドメインと、親子関係を持つサブドメインの両方が存在する場合には、個別にドメインを判定して適切な Issuer ID を送信するルールが必要になります。<br>
@@ -196,7 +202,8 @@ c1:[Type == "http://domain/upnsuffix", Value =~ "(?i)a\.com$"]  && c2:[Type == "
 c:[Type == "http://domain/upnsuffix", Value =~ "(?i)b\.co.jp$"]
  => issue(Type = "http://schemas.microsoft.com/ws/2008/06/identity/claims/issuerid", Value = "http://b.co.jp/adfs/services/trust/");
 ```
-
+以上のように、AADSTS50107 が発生した場合には、AD FS (IdP) が発行している Issuer ID と、Azure AD のカスタムドメインに設定されている Issuer URI に着目し、合致するようにルールを書き換えることで (もしくは正しい Issuer URI をカスタムドメインに設定することで) 対応することができます。
+<br>
 いかがでしたでしょうか。<br>
 上記内容が少しでも参考となりますと幸いです。<br>
 <br>
