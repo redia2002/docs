@@ -64,7 +64,7 @@ http://a.com/services/trust/
 b.com
 http://b.com/services/trust/
 ```
-一方で、AD FS 側には -supportMultipleDomain オプションを指定すると、以下のように認証するユーザーの UPN に応じて Issuer ID をを発行するルール (発行返還規則) が作成されます。
+一方で、AD FS 側には -supportMultipleDomain オプションを指定すると、以下のように認証するユーザーの UPN に応じて Issuer ID をを発行するルール (発行変換規則) が作成されます。
 
 ```
 c:[Type == "http://schemas.xmlsoap.org/claims/UPN"]
